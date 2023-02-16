@@ -1,12 +1,16 @@
-﻿using System;
+﻿using Hangman_Antwoord;
+using System;
+using System.Collections.Generic;
 
 namespace Hangman
 {
     class Program
     {
         static string correctWord = "hangman";
-        static string name;
-        static int numberOfGuesses;
+        static char[] letters;
+        static Player player;
+
+        public static char GuessedLetter { get; private set; }
 
         static void Main(string[] args)
         {
@@ -17,7 +21,10 @@ namespace Hangman
 
         private static void StartGame()
         {
-            Console.WriteLine("Starting the game...");
+            letters = new char[correctWord.Length];
+            for (int i = 0; i < correctWord.Length; i++)
+                letters[i] = '-';
+
             AskForUsersName();
         }
 
@@ -27,7 +34,7 @@ namespace Hangman
             string input = Console.ReadLine();
 
             if (input.Length >= 2)
-                name = input;
+                player = new Player(input);
             else
             {
                 // The user entered an invalid name
@@ -37,20 +44,38 @@ namespace Hangman
 
         private static void PlayGame()
         {
-            DisplayMaskedWord();
-            AskForLetter();
+            do
+            {
+                Console.Clear();
+                DisplayMaskedWord();
+                char guessedLetter = AskForLetter();
+                CheckLetter(guessedLetter);
+            } while (correctWord != new string(letters));
+
+            Console.Clear();
+        }
+
+        private static void CheckLetter(char guessedLetter)
+        {
+            for (int i = 0; i < correctWord.Length; i++)
+            {
+                if (guessedLetter == correctWord[i])
+                {
+                    letters[i] = guessedLetter;
+                    player.Score++;
+                }
+            }
         }
 
         static void DisplayMaskedWord()
         {
-            foreach (char c in correctWord)
-            {
-                Console.Write('-');
-            }
+            foreach (char c in letters)
+                Console.Write(c);
+
             Console.WriteLine();
         }
 
-        static void AskForLetter()
+        static char AskForLetter()
         {
             string input;
             do
@@ -59,14 +84,19 @@ namespace Hangman
                 input = Console.ReadLine();
             } while (input.Length != 1);
 
-            numberOfGuesses++;
+            var letter = input[0];
+
+            if (!player.GuessedLetters.Contains(letter)); 
+            player.GuessedLetters.Add(letter);
+
+            return letter;
         }
 
         private static void EndGame()
         {
             Console.WriteLine("Game over...");
-            Console.WriteLine($"Thanks for playing {name}");
-            Console.WriteLine($"Guesses:{numberOfGuesses}");
-        }
+            Console.WriteLine($"Thanks for playing {player.Name}");
+            Console.WriteLine($"Guesses:{player.GuessedLetters.Count} Score: {player.Score}");
+         }
     }
 }
