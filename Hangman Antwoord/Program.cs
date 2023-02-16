@@ -1,5 +1,4 @@
-﻿using Hangman_Antwoord;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Hangman
@@ -9,8 +8,6 @@ namespace Hangman
         static string correctWord = "hangman";
         static char[] letters;
         static Player player;
-
-        public static char GuessedLetter { get; private set; }
 
         static void Main(string[] args)
         {
@@ -86,8 +83,8 @@ namespace Hangman
 
             var letter = input[0];
 
-            if (!player.GuessedLetters.Contains(letter)); 
-            player.GuessedLetters.Add(letter);
+            if (!player.GuessedLetters.Contains(letter))
+                player.GuessedLetters.Add(letter);
 
             return letter;
         }
@@ -96,7 +93,7 @@ namespace Hangman
         {
             Console.WriteLine("Game over...");
             Console.WriteLine($"Thanks for playing {player.Name}");
-            Console.WriteLine($"Guesses:{player.GuessedLetters.Count} Score: {player.Score}");
-         }
+            Console.WriteLine($"Guesses:{player.GuessedLetters.Count} Score:{player.Score}");
+        }
     }
 }
