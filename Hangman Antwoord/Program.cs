@@ -1,16 +1,14 @@
-﻿using Hangman_Antwoord;
-using System;
+﻿using System;
+using System.IO;
 using System.Collections.Generic;
 
 namespace Hangman
 {
     class Program
     {
-        static string correctWord = "hangman";
+        static string correctWord;
         static char[] letters;
         static Player player;
-
-        public static char GuessedLetter { get; private set; }
 
         static void Main(string[] args)
         {
@@ -21,6 +19,12 @@ namespace Hangman
 
         private static void StartGame()
         {
+
+            var words = File.ReadAllLines(@"L:\Cskerp\Words.txt");
+
+            Random random= new Random();
+            correctWord = words[random.Next(0,words.Length)];
+
             letters = new char[correctWord.Length];
             for (int i = 0; i < correctWord.Length; i++)
                 letters[i] = '-';
@@ -86,17 +90,17 @@ namespace Hangman
 
             var letter = input[0];
 
-            if (!player.GuessedLetters.Contains(letter)); 
-            player.GuessedLetters.Add(letter);
+            if (!player.GuessedLetters.Contains(letter))
+                player.GuessedLetters.Add(letter);
 
             return letter;
         }
 
         private static void EndGame()
         {
-            Console.WriteLine("Game over...");
+            Console.WriteLine("Congrats!");
             Console.WriteLine($"Thanks for playing {player.Name}");
-            Console.WriteLine($"Guesses:{player.GuessedLetters.Count} Score: {player.Score}");
-         }
+            Console.WriteLine($"Guesses:{player.GuessedLetters.Count} Score:{player.Score}");
+        }
     }
 }
