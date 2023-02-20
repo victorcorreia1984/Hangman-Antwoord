@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace Hangman
 {
@@ -9,6 +10,7 @@ namespace Hangman
         static string correctWord;
         static char[] letters;
         static Player player;
+        
 
         static void Main(string[] args)
         {
@@ -19,18 +21,29 @@ namespace Hangman
 
         private static void StartGame()
         {
-
-            var words = File.ReadAllLines(@"L:\Cskerp\Words.txt");
-
+            string[] words;
+            try
+            {
+                words = File.ReadAllLines(@"L:\Cskerp\Wods.txt");
+            }
+            catch 
+            { 
+                words = new string[] { "dog", "tree", "cat" };
+            }
+            
             Random random= new Random();
             correctWord = words[random.Next(0,words.Length)];
 
             letters = new char[correctWord.Length];
             for (int i = 0; i < correctWord.Length; i++)
                 letters[i] = '-';
-
+    
             AskForUsersName();
         }
+
+      
+
+
 
         static void AskForUsersName()
         {
@@ -99,7 +112,7 @@ namespace Hangman
         private static void EndGame()
         {
             Console.WriteLine("Congrats!");
-            Console.WriteLine($"Thanks for playing {player.Name}");
+            Console.WriteLine($"Thanks for playing {player.Name}. The Correct word was {correctWord}");
             Console.WriteLine($"Guesses:{player.GuessedLetters.Count} Score:{player.Score}");
         }
     }
