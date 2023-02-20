@@ -40,10 +40,6 @@ namespace Hangman
             AskForUsersName();
         }
 
-      
-
-
-
         static void AskForUsersName()
         {
             Console.WriteLine("Enter your name:");
