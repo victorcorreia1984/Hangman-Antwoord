@@ -24,7 +24,7 @@ namespace Hangman
             string[] words;
             try
             {
-                words = File.ReadAllLines(@"L:\Cskerp\Wods.txt");
+                words = File.ReadAllLines(@"L:\Cskerp\Words.txt");
             }
             catch 
             { 
