@@ -10,7 +10,6 @@ namespace Hangman
         static string correctWord;
         static char[] letters;
         static Player player;
-        
 
         static void Main(string[] args)
         {
