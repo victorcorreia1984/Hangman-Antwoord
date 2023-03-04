@@ -1,125 +1,97 @@
-﻿namespace Hangman
+﻿using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+namespace Hangman
 {
     class Program
     {
-        static string correctWord;
-        static char[] letters;
-        static Player player; 
-        static List<string> words;
-
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-           //top level exception handling
-            try 
-            { 
-                StartGame();
-                PlayGame();
-                EndGame();
-            }
-            catch 
+            string wordToGuess = await GetWordToGuessAsync();
+            List<char> guessedLetters = new List<char>();
+
+            Console.WriteLine("Welcome to Hangman!");
+
+            while (true)
             {
-                WriteLine("Oops, something went wrong");
-            }
+                Console.WriteLine();
+                Console.WriteLine("Word to guess:");
+                Console.WriteLine(GetMaskedWord(wordToGuess, guessedLetters));
 
-        }
-
-        private static async void StartGame()
-        {
-            correctWord = await GetHangmanWord();
-
-            letters = new char[correctWord.Length];
-            //letters = new List<CorrectWord>();
-            
-            for (int i = 0; i < correctWord.Length; i++)
-                letters[i] = '-';
-    
-            AskForUsersName();
-        }
-
-        static async Task<string> GetHangmanWord()
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                HttpResponseMessage response = await client.GetAsync("https://random-word-api.herokuapp.com/word?number=1");
-                response.EnsureSuccessStatusCode();
-                string[] words = await response.Content.ReadAsAsync<string[]>();
-                return words[0].ToLower();
-            }
-        }
-
-            static void AskForUsersName()
-        {
-            WriteLine("Enter your name:");
-            string input = ReadLine();
- 
-
-            if (input.Length >= 2)
-                player = new Player(input);
-            else
-            {
-                // The user entered an invalid name
-                AskForUsersName();
-            }
-        }
-
-        private static void PlayGame()
-        {
-            do
-            {
-                Clear();
-                DisplayMaskedWord();
-                char guessedLetter = AskForLetter();
-                CheckLetter(guessedLetter);
-            } while (correctWord != new string(letters));
-
-            Clear();
-        }
-
-        private static void CheckLetter(char guessedLetter)
-        {
-            for (int i = 0; i < correctWord.Length; i++)
-            {
-                if (guessedLetter == correctWord[i])
+                Console.Write("Guess a letter: ");
+                char letter = Console.ReadLine()[0];
+                if (guessedLetters.Contains(letter))
                 {
-                    letters[i] = guessedLetter;
-                    player.Score++;
+                    Console.WriteLine("You've already guessed that letter.");
+                    continue;
+                }
+
+                guessedLetters.Add(letter);
+
+                if (wordToGuess.Contains(letter))
+                {
+                    Console.WriteLine("Correct!");
+                    if (HasWon(wordToGuess, guessedLetters))
+                    {
+                        Console.WriteLine("You win!");
+                        break;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Incorrect.");
+                    if (HasLost(guessedLetters))
+                    {
+                        Console.WriteLine("You lose. The word was: " + wordToGuess);
+                        break;
+                    }
                 }
             }
         }
 
-        static void DisplayMaskedWord()
+        static async Task<string> GetWordToGuessAsync()
         {
-            foreach (char c in letters)
-                Write(c);
-
-            WriteLine();
-        }
-
-        static char AskForLetter()
-        {
-            string input;
-            do
+            using (var client = new HttpClient())
             {
-                WriteLine("Enter a letter:");
-                input = ReadLine();
-            } while (input.Length != 1);
+                var response = await client.GetAsync("https://otv-hangman.azurewebsites.net/api/GetWord");
+                string responceString = await response.Content.ReadAsStringAsync();
 
-            var letter = input[0];
+                JObject obj = JObject.Parse(responceString);
+                string word = obj.GetValue("Value").ToString();
 
-            if (!player.GuessedLetters.Contains(letter))
-                player.GuessedLetters.Add(letter);
-
-            return letter;
+                return word.Trim();
+            }
         }
 
-        private static void EndGame()
+        static string GetMaskedWord(string word, List<char> guessedLetters)
         {
-            WriteLine("Congrats!");
-            WriteLine($"Thanks for playing {player.Name}. The Correct word was {correctWord}");
-            WriteLine($"Guesses:{player.GuessedLetters.Count} Score:{player.Score}");
+            string maskedWord = "";
+            foreach (char c in word)
+            {
+                maskedWord += (guessedLetters.Contains(c) ? c : '_') + " ";
+            }
+            return maskedWord.Trim();
+        }
 
-           
+        static bool HasWon(string word, List<char> guessedLetters)
+        {
+            foreach (char c in word)
+            {
+                if (!guessedLetters.Contains(c))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
 
+        static bool HasLost(List<char> guessedLetters)
+        {
+            return guessedLetters.Count >= 6;
         }
     }
 }
