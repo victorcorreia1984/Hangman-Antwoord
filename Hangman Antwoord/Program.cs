@@ -23,24 +23,9 @@
 
         }
 
-        private static void StartGame()
+        private static async void StartGame()
         {
-           
-            //Vervang alle arrays met lists
-            List<string> words; 
-            //try
-            //{
-            //   // words = new List<string> { File.ReadAllLines("https://otv-hangman.azurewebsites.net/api/GetWord").ToList() };
-            //}
-            //catch 
-            //{ 
-                //Catch vir iets wat jy nie verwag nie
-                // vervang alle arays met lists
-                words = new List<string> { "dog", "tree", "cat" };
-            //}
-            
-            Random random = new Random();
-            correctWord = words[random.Next(0,words.Count)];
+            correctWord = await GetHangmanWord();
 
             letters = new char[correctWord.Length];
             //letters = new List<CorrectWord>();
@@ -51,7 +36,18 @@
             AskForUsersName();
         }
 
-        static void AskForUsersName()
+        static async Task<string> GetHangmanWord()
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                HttpResponseMessage response = await client.GetAsync("https://random-word-api.herokuapp.com/word?number=1");
+                response.EnsureSuccessStatusCode();
+                string[] words = await response.Content.ReadAsAsync<string[]>();
+                return words[0].ToLower();
+            }
+        }
+
+            static void AskForUsersName()
         {
             WriteLine("Enter your name:");
             string input = ReadLine();
