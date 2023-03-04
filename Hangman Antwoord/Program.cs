@@ -1,72 +1,97 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace Hangman
 {
     class Program
     {
-        static string correctWord = "hangman";
-        static string name;
-        static int numberOfGuesses;
-
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            StartGame();
-            PlayGame();
-            EndGame();
-        }
+            string wordToGuess = await GetWordToGuessAsync();
+            List<char> guessedLetters = new List<char>();
 
-        private static void StartGame()
-        {
-            Console.WriteLine("Starting the game...");
-            AskForUsersName();
-        }
+            Console.WriteLine("Welcome to Hangman!");
 
-        static void AskForUsersName()
-        {
-            Console.WriteLine("Enter your name:");
-            string input = Console.ReadLine();
-
-            if (input.Length >= 2)
-                name = input;
-            else
+            while (true)
             {
-                // The user entered an invalid name
-                AskForUsersName();
+                Console.WriteLine();
+                Console.WriteLine("Word to guess:");
+                Console.WriteLine(GetMaskedWord(wordToGuess, guessedLetters));
+
+                Console.Write("Guess a letter: ");
+                char letter = Console.ReadLine()[0];
+                if (guessedLetters.Contains(letter))
+                {
+                    Console.WriteLine("You've already guessed that letter.");
+                    continue;
+                }
+
+                guessedLetters.Add(letter);
+
+                if (wordToGuess.Contains(letter))
+                {
+                    Console.WriteLine("Correct!");
+                    if (HasWon(wordToGuess, guessedLetters))
+                    {
+                        Console.WriteLine("You win!");
+                        break;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Incorrect.");
+                    if (HasLost(guessedLetters))
+                    {
+                        Console.WriteLine("You lose. The word was: " + wordToGuess);
+                        break;
+                    }
+                }
             }
         }
 
-        private static void PlayGame()
+        static async Task<string> GetWordToGuessAsync()
         {
-            DisplayMaskedWord();
-            AskForLetter();
-        }
-
-        static void DisplayMaskedWord()
-        {
-            foreach (char c in correctWord)
+            using (var client = new HttpClient())
             {
-                Console.Write('-');
+                var response = await client.GetAsync("https://otv-hangman.azurewebsites.net/api/GetWord");
+                string responceString = await response.Content.ReadAsStringAsync();
+
+                JObject obj = JObject.Parse(responceString);
+                string word = obj.GetValue("Value").ToString();
+
+                return word.Trim();
             }
-            Console.WriteLine();
         }
 
-        static void AskForLetter()
+        static string GetMaskedWord(string word, List<char> guessedLetters)
         {
-            string input;
-            do
+            string maskedWord = "";
+            foreach (char c in word)
             {
-                Console.WriteLine("Enter a letter:");
-                input = Console.ReadLine();
-            } while (input.Length != 1);
-
-            numberOfGuesses++;
+                maskedWord += (guessedLetters.Contains(c) ? c : '_') + " ";
+            }
+            return maskedWord.Trim();
         }
 
-        private static void EndGame()
+        static bool HasWon(string word, List<char> guessedLetters)
         {
-            Console.WriteLine("Game over...");
-            Console.WriteLine($"Thanks for playing {name}");
-            Console.WriteLine($"Guesses:{numberOfGuesses}");
+            foreach (char c in word)
+            {
+                if (!guessedLetters.Contains(c))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        static bool HasLost(List<char> guessedLetters)
+        {
+            return guessedLetters.Count >= 6;
         }
     }
 }
